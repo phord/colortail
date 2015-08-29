@@ -71,17 +71,16 @@ int ColorTail::start(int argc, char **argv)
    assert (options != NULL);
 
    // the options has been stripped from argc and argv, just the
-   // files to tail and the program namn left
+   // files to tail and the program name left
 
    // tailfile counter
    int tailfile_counter = 0;
 
+   // TODO: Default to "-" if no filenames given
+
    // iterate through all the files to tail
    for (int i = optind ; i < argc ; i++)
    {
-      // new TailFile object
-      TailFile *new_tailfile = new TailFile();
-
       Colorizer *colorizer = NULL;
 
       // check if colors
@@ -97,17 +96,11 @@ int ColorTail::start(int argc, char **argv)
 	    {
 	       // yes there is a first config file
 	       colorizer = new Colorizer(options->cfg_filenames[0]);
-
-	       // open the tailfile
-	       new_tailfile->open(argv[i], colorizer);
 	    }
 	    else
 	    {
 	       // no config file
-	       // print error
 	       cerr << "colortail: Couldn't open global color config file. Skipping colors for the " << argv[i] << " file." << endl;
-               // open the tailfile without colorizer
-	       new_tailfile->open(argv[i], NULL);
 	    }
 	 }
 	 else
@@ -120,9 +113,6 @@ int ColorTail::start(int argc, char **argv)
 	       // there is a config file
 	       colorizer = new Colorizer
 		  (options->cfg_filenames[tailfile_counter]);
-
-	       // open the tailfile
-	       new_tailfile->open(argv[i], colorizer);
 	    }
 	    else
 	    {
@@ -138,88 +128,66 @@ int ColorTail::start(int argc, char **argv)
              cade.clear();
            }
          }
-		char* ccade = new char[cade.length()+1];
-		strcpy(ccade, cade.c_str());
-		colorizer = new Colorizer(ccade);
-		new_tailfile->open(argv[i], colorizer);
+		colorizer = new Colorizer(cade.c_str());
 	    }
 	 }
+    }
+
+      // new TailFile object
+      TailFile *new_tailfile = new TailFile();
+
+      // open the tailfile, with or without colorizer
+      if ( new_tailfile->open(argv[i], colorizer) ) {
+        // Error opening file.  Ditch it from list.
+        // FIXME: should we quit instead?
+        delete new_tailfile;
+        delete colorizer;
       }
-      else
-      {
-	 // no colors
+      else {
 
-	 // open the tailfile without colorizer
-	 new_tailfile->open(argv[i], NULL);
-      }
+        // add the tailfile to the end of the tailfile list
+        m_tailfiles.add_last(new_tailfile);
 
-      // add the tailfile to the end of the tailfile list
-      m_tailfiles.add_last(new_tailfile);
-
-      // increase the tailfile counter
-      tailfile_counter++;
-   }
-
-   // check if not follow-mode
-   if (options->follow == 0)
-   {
-      // not follow-mode, just print the tails of the files in the list
-
-      // make an iterator
-      ListIterator<TailFile*> itr(m_tailfiles);
-      TailFile *current_file;
-
-      // iterate through the file list
-      for (itr.init() ; !itr ; ++itr)
-      {
-	 current_file = itr();
-
-	 // check if verbose mode
-	 if (options->verbose)
-	 {
-	    // print filename
-	    current_file->printFilename();
-	 }
-
-	 // print the specified number of rows
-	 current_file->print(options->rows);
+        // increase the tailfile counter
+        tailfile_counter++;
       }
    }
-   else
-   {
-      // follow mode
 
-      // make an iterator
-      ListIterator<TailFile*> itr(m_tailfiles);
-      TailFile *current_file;
+    // make an iterator
+    ListIterator<TailFile*> itr(m_tailfiles);
+    TailFile *current_file;
 
-      // iterate through the file list and print the no of rows wanted
-      for (itr.init() ; !itr ; ++itr)
-      {
-	 current_file = itr();
+    // iterate through the file list
+    for (itr.init() ; !itr ; ++itr)
+    {
+     current_file = itr();
 
-	 // check if more than zero rows
-	 if (options->rows > 0)
-	 {
-	    // check if verbose mode
-	    if (options->verbose)
-	    {
-	       // print filename
-	       current_file->printFilename();
-	    }
-	 }
+     // check if not follow-mode or rows>0
+     if (options->follow==0 || options->rows > 0)
+     {
+       // check if verbose mode
+       if (options->verbose)
+       {
+          // print filename
+          current_file->printFilename();
+       }
+     }
 
-	 // print the specified number of rows
-	 current_file->print(options->rows);
-      }
+     // print the specified number of rows
+     current_file->print(options->rows);
+    }
 
+    // TODO: Do not follow stdin ("-")
+
+    if (options->follow && tailfile_counter > 0)
+    {
       // the "forever" part
 
       // keeps track of the last file a line was printed from
       char *last_filename = NULL;
-      int changed = 0;
       while (1)
       {
+        int changed = 0;
 	 // iterate through the file list and check if the
 	 // file size has changed.
 
@@ -243,21 +211,13 @@ int ColorTail::start(int argc, char **argv)
 	 }
 
 	 // check if changed
-	 if (changed)
-	 {
-	    // something changed
-
-	    // clear the flag
-	    changed = 0;
-	 }
-	 else
+	 if (!changed)
 	 {
 	    // nothing changed
-
 	    // sleep one second
 	    sleep(1);
 	 }
-      }
    }
+ }
    return 0;
 }

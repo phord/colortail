@@ -44,12 +44,12 @@ TailFile::~TailFile()
    {
       delete m_filename;
    }
-   
+
    if (m_file)
    {
       fclose(m_file);
    }
-   
+
    if (m_colorizer)
    {
       delete m_colorizer;
@@ -149,10 +149,10 @@ void TailFile::print(int n)
       {
 	 buf[i] = '\0';
       }
-      
+
       // read line
       char *ret = fgets(buf, MAX_CHARS_READ-1, m_file);
-      
+
       // read more than zero chars
       if (ret != NULL)
       {
@@ -161,7 +161,7 @@ void TailFile::print(int n)
 		if (last == '\n') {
 			buf[strlen(buf)-1] = '\0';
 		}*/
-	
+
 	 // print the line
 	 print_to_stdout(buf);
       }
@@ -171,7 +171,7 @@ void TailFile::print(int n)
 	 // stop looping
 	 loop = 0;
       }
-   }   
+   }
 }
 
 void TailFile::printFilename()
@@ -199,7 +199,7 @@ void TailFile::find_position(int n)
 {
    // sets the file to the position after the n:th return
    // from the end of the file
-   
+
    // check if file is not open
    if (m_file == NULL)
    {
@@ -215,7 +215,9 @@ void TailFile::find_position(int n)
       fseek(m_file, 0, SEEK_END);
       return;
    }
-   
+
+   // FIXME: Special case for stdin: Don't read from end
+
    const int bufSize (2048);
    // buffer for chars
    char buf[bufSize];
@@ -233,7 +235,7 @@ void TailFile::find_position(int n)
    pos = ftell(m_file);
 
    while (pos != 0)
-   {   
+   {
       // sub bufSize-1 from position
       pos -= (bufSize-1);
 
@@ -241,14 +243,14 @@ void TailFile::find_position(int n)
       if (pos < 0)
       {
 	 // pos below zero
-	 
+
 	 // calc new bytesToRead (pos is < 0)
 	 bytesToRead += pos;
-	 
+
 	 // pos below zero, set pos to zero
 	 pos = 0;
       }
-   
+
       // goto that position
       fseek(m_file, pos, SEEK_SET);
 
@@ -291,7 +293,7 @@ long TailFile::end_of_file_position()
    // returns the position for the end of the current file ie
    // the size of the file.
    // doesn't modify the current position
-   
+
    // check if file isn't open
   if (m_file == NULL && reopen())
    {
@@ -382,7 +384,7 @@ void TailFile::follow_print(int n, int verbose, char *last_filename)
 
    // reset saved EOF result, see man fgetc(3)
    clearerr(m_file);
-   
+
    // read n characters
    //char *ret = fgets(buf, (n + 1), m_file);
    for (int i = 0 ; i < (n-1) ; i++)
@@ -391,7 +393,7 @@ void TailFile::follow_print(int n, int verbose, char *last_filename)
 
       // add the character to the string
       m_follow_buffer->put(ch);
-      
+
       // check if return
       if (ch == '\n')
       {
@@ -423,14 +425,14 @@ void TailFile::follow_print(int n, int verbose, char *last_filename)
 
 	 // get the string
 	 const char *str = source_str.c_str();
-	 
+
 	 // print the line
 	 print_to_stdout(str);
 
 	 // free the mem
 	 delete m_follow_buffer;
 	 m_follow_buffer = NULL;
-	 
+
 	 // update the saved stream position with the no of characters
 	 // until and including the '\n'
 
@@ -439,7 +441,7 @@ void TailFile::follow_print(int n, int verbose, char *last_filename)
 	 // break the loop
 	 break;
       }
-   }   
+   }
 }
 
 void TailFile::print_to_stdout(const char *str)
@@ -469,7 +471,3 @@ void TailFile::print_to_stdout(const char *str)
       cout << str;
    }
 }
-
-
-
-
