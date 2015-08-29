@@ -202,7 +202,7 @@ int CfgFileParser::read_item()
 	    if (regcomp(searchdata->m_preg, regexp, REG_EXTENDED) != 0)
 	    {
 	       // failed to make compiled reg exp pattern
-	       cout << "colortail: Failed to make compiled reg exp pattern for "
+	       cerr << "colortail: Failed to make compiled reg exp pattern for "
 		    << "reg exp in config file " << m_filename << " at line "
 		    << m_line << ". Skipping this line." << endl;
 	       
@@ -260,7 +260,7 @@ char* CfgFileParser::read_color()
       {
 	 if (strncmp(tmp, "COLOR", 5) != 0)
 	 {
-	    cout << "colortail: Error in config file: " << m_filename
+	    cerr << "colortail: Error in config file: " << m_filename
 		 << " at line " << m_line << ". Skipping this line." << endl;
 	 }
 	 else 
@@ -360,7 +360,7 @@ char* CfgFileParser::read_color()
 	    if (found_color == 0)
 	    {
 	       // didn't found color
-	       cout << "colortail: Don't recognize color in config file: "
+	       cerr << "colortail: Don't recognize color in config file: "
 		    << m_filename << " at line " << m_line << endl;
 
 	       // free mem
@@ -400,7 +400,7 @@ int CfgFileParser::read_left()
       if (!tmp)
       {
 	 // error reading line
-	 cout << "colortail: Error reading line in config file: "
+	 cerr << "colortail: Error reading line in config file: "
 	      << m_filename << " at line " << m_line << "." << endl;
 	 // error, return 2
 	 return 2;
@@ -421,7 +421,7 @@ int CfgFileParser::read_left()
 	 else
 	 {
 	    // not a '{'
-	    cout << "colortail: Error, expected '{' but found '"
+	    cerr << "colortail: Error, expected '{' but found '"
 		 << tmp[0] << "' in config file: " << m_filename
 		 << " at line " << m_line << "." << endl;
 	    // free mem
@@ -455,7 +455,7 @@ char* CfgFileParser::read_regexp()
       if (!tmp)
       {
 	 // error reading line
-	 cout << "colortail: Error reading line in config file: "
+	 cerr << "colortail: Error reading line in config file: "
 	      << m_filename << " at line " << m_line << "." << endl;
 
 	 // error, return NULL
@@ -506,7 +506,7 @@ int CfgFileParser::parse(const char *filename)
    if (!m_infile)
    {
       // open failed
-      cout << "colortail: Failed to open config file: " << filename << endl;
+      cerr << "colortail: Failed to open config file: " << filename << endl;
       return 0;
    }
 
